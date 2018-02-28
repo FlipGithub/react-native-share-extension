@@ -58,9 +58,14 @@ public class ShareModule extends ReactContextBaseJavaModule {
         if (Intent.ACTION_SEND.equals(action) && "text/plain".equals(type)) {
           value = intent.getStringExtra(Intent.EXTRA_TEXT);
         }
-        else if (Intent.ACTION_SEND.equals(action) && ("image".equals(maintype) || "video".equals(maintype)  || "audio".equals(maintype) ) ) {
+        else if (Intent.ACTION_SEND.equals(action) && (
+          "image".equals(maintype) ||
+          "video".equals(maintype) ||
+          "audio".equals(maintype) ||
+          "application/pdf".equals(type)
+        )) {
           Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-         value = uri.toString();
+          value = uri.toString();
 
        } else {
          value = "";
