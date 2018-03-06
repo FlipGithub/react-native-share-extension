@@ -10,6 +10,9 @@ import com.facebook.react.bridge.Arguments;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
+import android.content.Context;
 
 import android.graphics.Bitmap;
 import java.io.InputStream;
@@ -37,11 +40,34 @@ public class ShareModule extends ReactContextBaseJavaModule {
       promise.resolve(processIntent());
   }
 
+  public String getFileName(Context context, Uri uri) {
+    String result = null;
+    if (uri.getScheme().equals("content")) {
+      Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+      try {
+        if (cursor != null && cursor.moveToFirst()) {
+          result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+        }
+      } finally {
+        cursor.close();
+      }
+    }
+    if (result == null) {
+      result = uri.getPath();
+      int cut = result.lastIndexOf('/');
+      if (cut != -1) {
+        result = result.substring(cut + 1);
+      }
+    }
+    return result;
+  }
+
   public WritableMap processIntent() {
       WritableMap map = Arguments.createMap();
 
       String value = "";
       String type = "";
+      String filename = "";
       String action = "";
 
       Activity currentActivity = getCurrentActivity();
@@ -66,6 +92,7 @@ public class ShareModule extends ReactContextBaseJavaModule {
         )) {
           Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
           value = uri.toString();
+          filename = getFileName(currentActivity, uri);
 
        } else {
          value = "";
@@ -76,7 +103,8 @@ public class ShareModule extends ReactContextBaseJavaModule {
       }
 
       map.putString("type", type);
-      map.putString("value",value);
+      map.putString("value", value);
+      map.putString("filename", filename);
 
       return map;
   }
